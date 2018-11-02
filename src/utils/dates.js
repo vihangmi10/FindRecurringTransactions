@@ -15,7 +15,17 @@ const recurrencePeriodDifference = (currentDays, existingDays) => {
     return Math.abs(currentDays - existingDays) <= RECURRENCE_THRESHOLD;
 };
 
+const avgRecurrencePeriod = (existingRecurrencePeriod, currentRecurrencePeriod) => {
+    console.log('AVERAGE RECURRING PERIOD EXISTING RP --- ', existingRecurrencePeriod);
+    console.log('AVERAGE RECURRING PERIOD CURRENT RP --- ', currentRecurrencePeriod);
+    if (existingRecurrencePeriod === 0) {
+        return currentRecurrencePeriod;
+    }
+  return Math.round(((existingRecurrencePeriod + currentRecurrencePeriod)/2));
+};
+
 export default {
     daysBetweenDates,
-    recurrencePeriodDifference
+    recurrencePeriodDifference,
+    avgRecurrencePeriod
 }
