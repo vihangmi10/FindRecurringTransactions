@@ -1,0 +1,36 @@
+{
+  "name": "findrecurringtransactions",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "babel-node --presets env app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vihangmi10/FindRecurringTransactions.git"
+  },
+  "author": "vihang mirkhelkar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vihangmi10/FindRecurringTransactions/issues"
+  },
+  "homepage": "https://github.com/vihangmi10/FindRecurringTransactions#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "debug": "^4.1.0",
+    "express": "^4.16.4",
+    "http": "0.0.0",
+    "moment": "^2.22.2",
+    "path": "^0.12.7",
+    "string-similarity": "^2.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "eslint": "^5.8.0"
+  }
+}
