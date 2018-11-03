@@ -68,8 +68,17 @@ const matchTransaction = (transactionsInMap, currentTransaction) => {
                 console.log('Number of days is ----- ', num_of_days);
                 let recurrencePeriodDiffernece = dateFunctions.recurrencePeriodDifference(num_of_days,transactionInMap.recurring_period);
                 console.log('IS THE NUMBER OF DAYS CLOSER TO EXISTING RECURRING PERIOD ----- ', recurrencePeriodDiffernece);
-                if (amtDiff && recurrencePeriodDiffernece) {
-
+                // if amount difference is less or if the amount is same
+                // group them into a cluster and push it at the end of array
+                if (amtDiff) {
+                    console.log('----------------AMOUNT DIFFERENCE IS LESS ----------------');
+                    let transactionArray = [];
+                    transactionArray.push(transactionInMap, currentTransaction);
+                    transactionObj = createObj(currentTransaction, num_of_days,transactionInMap);
+                    transactionsInMap.records.push(transactionObj);
+                    console.log('---------------------UPDATED TRANSACTION ARRAY IS -----------------------------------');
+                    console.log(JSON.stringify(transactionsInMap.records));
+                    console.log('---------------------UPDATED TRANSACTION ARRAY IS -----------------------------------')
                     transactionObj = {
                         'name': currentTransaction.name,
                         'records': transactionInMap
@@ -94,7 +103,7 @@ const matchTransaction = (transactionsInMap, currentTransaction) => {
 const createObj = (transaction, num_of_days, previousTransaction) =>{
     let transactionsArray = [];
     if (previousTransaction) {
-        transactionsArray.push(transaction, previousTransaction);
+        transactionsArray.push(previousTransaction, transaction);
     } else {
         transactionsArray.push(transaction);
     }
@@ -158,7 +167,7 @@ const upsertTransactions = async (transactionObject) => {
                 transactionObjInMap.records.averageAmount = avgAmount;
                 transactionObjInMap.records.recurring_period = num_of_days;
                 transactionObjInMap.records.averageRecurringPeriod = averageRecurrencePeriod;
-                transactionObjInMap.records.transactions.unshift(transaction);
+                transactionObjInMap.records.transactions.push(transaction);
             /**
              // amount difference not closer to threshold then...
              // create a new JSON of transaction and push it as the first element in array
@@ -167,17 +176,18 @@ const upsertTransactions = async (transactionObject) => {
                 console.log('AMOUNT DIFFERENCE EXCEEDED ....');
                 let transactionObj = createObj(transaction,0);
                 let tempArray = storingTransactionsMAP.get(transaction.name);
-                tempArray.unshift(transactionObj);
+                tempArray.push(transactionObj);
             /**
              // RECURRENCE PERIOD DIFFERENCE is not match then ....
              //  Pick up the latest transaction in the map
              //
              **/
             } else {
-                let previousTransaction = transactionObjInMap.records.transactions[0];
+                let previousTransaction = transactionObjInMap.records.transactions;
+                previousTransaction = previousTransaction[previousTransaction.length -1];
                 let transactionObj = createObj(transaction, num_of_days, previousTransaction);
                 let tempArray = storingTransactionsMAP.get(transaction.name);
-                tempArray.unshift(transactionObj);
+                tempArray.push(transactionObj);
             }
         }
     });
@@ -188,22 +198,11 @@ const upsertTransactions = async (transactionObject) => {
        let transaction2Key = transaction2[0].toLowerCase();
        return (transaction1Key < transaction2Key) ? -1 : (transaction1Key > transaction2Key) ? 1 : 0;
    }));
-
-
    console.log('Sorted MAP is ---- ', sortedMap);
 
     let vpn = sortedMap.get('VPN Service');
     console.log('VPN ______---------- ',JSON.stringify(vpn));
 
-    // keys = keys.sort((firstKey , secondKey) => {
-    //     firstKey = firstKey.toLowerCase();
-    //     secondKey = secondKey.toLowerCase();
-    //     console.log('First key ... ', firstKey);
-    //     console.log('Second key .... ', secondKey);
-    //     return (firstKey < secondKey) ? -1 : (firstKey > secondKey) ? 1 : 0;
-    // });
-    // console.log('KEYS IS _--- ', keys);
-    // console.log('SORTED MAP IS ---- ', storingTransactionsMAP);
 };
 
 export default upsertTransactions
