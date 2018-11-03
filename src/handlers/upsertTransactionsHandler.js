@@ -217,6 +217,12 @@ const upsertTransactions = async (transactionObject) => {
 
     let vpn = sortedMap.get('VPN Service');
     console.log('VPN ______---------- ',vpn);
+    vpn.forEach(vpnTransaction => {
+        if (vpnTransaction.transactions.length >=3) {
+            console.log('------------- RECURRING TRANSACTIONS ARE ------------');
+            console.log(vpnTransaction.transactions);
+        }
+    });
 
 };
 
