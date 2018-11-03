@@ -13,7 +13,7 @@ const matchKey = (transactionName, storingTransactionsMAP) => {
         let getTransaction = storingTransactionsMAP.get(transactionName);
         transactionObject = {
             'name': transactionName,
-            'records': getTransaction[0]
+            'records': getTransaction
         };
         return transactionObject;
         // if the key is not exact match then look for a similar string. If string is similar then return object else return empty
@@ -26,14 +26,71 @@ const matchKey = (transactionName, storingTransactionsMAP) => {
                 let getTransaction = storingTransactionsMAP.get(key);
                 transactionObject = {
                     'name': key,
-                    'records': getTransaction[0]
+                    'records': getTransaction
                 };
             }
         });
         return transactionObject;
     }
 };
+/**
+ * This function checks which of the transaction present in the MAP closes resembles the current transaction
+ * Returns empty for no elements in MAP
+ * Returns the same transaction if only 1 transaction is present
+ * Compares amount and recurrence period in each transactions in MAP and returns the closest transaction found
+ * If no closest transaction found it will return the most recent transaction from the MAP
+ */
+const matchTransaction = (transactionsInMap, currentTransaction) => {
+    console.log('IN FUNCTION MATCH THE CORRECT TRANSACTION ----- ');
+    console.log('EXISTING TRANSACTION RECORDS ARE ----- ', transactionsInMap);
+    console.log('CURRENT TRANSACTIONS IS ----- ', currentTransaction);
+    if (Object.keys(transactionsInMap).length === 0){
+        console.log('There are 0 transactions in MAP');
+        return transactionsInMap;
+    } else {
+        console.log('1 OR MORE transactions in the MAP....');
+        if(transactionsInMap.records.length ===1){
+            console.log('---------ONLY 1 transaction is present ----------- that is ------ ', transactionsInMap);
+            let transactionObject = {
+                'name': currentTransaction.name,
+                'records': transactionsInMap.records[0]
+            };
+            return transactionObject;
+        } else {
+            let transactionObj = {};
+            // check for each transactions in the map and return the one that has amount difference and recurrence period closest to the current transaction
+            transactionsInMap.records.forEach(transactionInMap => {
+                console.log('---0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-EACH TRANSACTION IN MAP IS ---0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-');
+                console.log(transactionInMap);
+                let amtDiff = amountFunctions.amountDifference(transactionInMap.amount, currentTransaction.amount);
+                console.log('AMOUNT DIFFERENCE is ----- ', amtDiff);
+                let num_of_days = dateFunctions.daysBetweenDates(currentTransaction.date, transactionInMap.date);
+                console.log('Number of days is ----- ', num_of_days);
+                let recurrencePeriodDiffernece = dateFunctions.recurrencePeriodDifference(num_of_days,transactionInMap.recurring_period);
+                console.log('IS THE NUMBER OF DAYS CLOSER TO EXISTING RECURRING PERIOD ----- ', recurrencePeriodDiffernece);
+                if (amtDiff && recurrencePeriodDiffernece) {
 
+                    transactionObj = {
+                        'name': currentTransaction.name,
+                        'records': transactionInMap
+                    }
+                    // return most recent transaction from the map
+                } else {
+                    console.log('AMOUNT DIFFERENCE DOES NOT MATCH OR RECURRING PERIOD DOES NOT MATCH ------ ');
+                    transactionObj = {
+                        'name': currentTransaction.name,
+                        'records': transactionsInMap.records[0]
+                    }
+                }
+            });
+            return transactionObj;
+        }
+    }
+    // transactionsInMap.forEach(transaction => {
+    //     console.log('Each transaction is --------- ')
+    // });
+};
+// create an object to be pushed to map
 const createObj = (transaction, num_of_days, previousTransaction) =>{
     let transactionsArray = [];
     if (previousTransaction) {
@@ -57,20 +114,26 @@ const upsertTransactions = async (transactionObject) => {
     transactionsArray.forEach( transaction => {
         count++;
         console.log('------------------------------------'+ count + '----------------------------------------------------------------------');
+        console.log('THE MAP AT PRESENT AFTER '+count+ ' IS ----- ', storingTransactionsMAP);
         console.log('FINDING FOR NAME ---- ', transaction.name);
         let transactionObjInMap = matchKey(transaction.name, storingTransactionsMAP);
-        console.log('tranasaction object in map should be empty.... ', transactionObjInMap);
-
+        console.log('transaction object in map .... ', transactionObjInMap);
+        console.log('---------------------00000000000000000000000-------------------------------');
+         transactionObjInMap = matchTransaction(transactionObjInMap, transaction);
+        console.log('---------------------00000000000000000000000-------------------------------');
         // If an transaction matching the transaction.name does not exists then create a new object and push it in the MAP
         if (Object.keys(transactionObjInMap).length === 0) {
             console.log(' Map does not contain this .... add it to the map ....');
             let transactionObj = createObj(transaction,0);
             storingTransactionsMAP.set(transaction.name, [transactionObj]);
-        // if the transaction objec in Map is present then..
+        // if the transaction object in Map is present then..
             // calculate the number of days between the dates of current transaction and transaction in MAP
             // Calculate if recurrence period difference is NEAR to the THRESHOLD
             // calculate the difference between amounts of current transaction and transaction in MAP
         } else {
+            console.log('---------------------Transaction object in map now after matchTransaction function is -------------------');
+            console.log(transactionObjInMap);
+            console.log('----------------------------------------------------------------------------------------------------------');
             let num_of_days = dateFunctions.daysBetweenDates(transaction.date, transactionObjInMap.records.date);
             console.log('Number of days is ----- ', num_of_days);
             let recurrencePeriodDiffernece = dateFunctions.recurrencePeriodDifference(num_of_days,transactionObjInMap.records.recurring_period);
@@ -121,8 +184,6 @@ const upsertTransactions = async (transactionObject) => {
 
     console.log('ORIGINAL MAP IS  ---- ', storingTransactionsMAP);
    let sortedMap = new Map([...storingTransactionsMAP.entries()].sort((transaction1, transaction2) => {
-       console.log('TRANSACTION 1 is ---- ', transaction1);
-       console.log('TRANSACTION 2 is ---- ', transaction2);
        let transaction1Key = transaction1[0].toLowerCase();
        let transaction2Key = transaction2[0].toLowerCase();
        return (transaction1Key < transaction2Key) ? -1 : (transaction1Key > transaction2Key) ? 1 : 0;
@@ -130,6 +191,9 @@ const upsertTransactions = async (transactionObject) => {
 
 
    console.log('Sorted MAP is ---- ', sortedMap);
+
+    let vpn = sortedMap.get('VPN Service');
+    console.log('VPN ______---------- ',JSON.stringify(vpn));
 
     // keys = keys.sort((firstKey , secondKey) => {
     //     firstKey = firstKey.toLowerCase();
